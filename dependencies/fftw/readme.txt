@@ -16,3 +16,5 @@ Into this folder.  you should have (at least) the following files here:
 In addition, in order to support codeblocks compilation, I used MSVC++ lib command to produce 'libfftw3-3.lib', as I was unsuccessful in using 'dllwrap' from the codeblocks:: 12.11 mingw base (which we are using in windows at the moment).
 
 dos> lib /def:libfftw3-3.def
+
+NOTE: as of April 30, 2016, I have incorporated this into a CMakeList.txt file so it is done by the cmake step

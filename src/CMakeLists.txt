@@ -11,6 +11,10 @@ ENDMACRO( FIND_PATH_REQUIRED )
 
 PROJECT( fftwcalc )
 SET( fftwcalc_SRCS fftw-calc.c cpuid.c )
+IF(WIN32)
+    add_subdirectory(${CMAKE_SOURCE_DIR}/../dependencies/fftw ${CMAKE_CURRENT_BINARY_DIR}/../dependencies/fftw)
+ENDIF(WIN32)
+
 FIND_PATH_REQUIRED( FFTW_INC fftw3.h PATHS "${CMAKE_SOURCE_DIR}/../dependencies/fftw" PATH_SUFFIXES include )
 INCLUDE_DIRECTORIES( ${FFTW_INC} )
 IF(WIN32)

@@ -24,6 +24,16 @@ Using a shell or command prompt window, create a directory and launch CMake.  It
 
 ### Tested On
 
+Win7  32-bit, FFTW 3.3.4, MSVC++ Express 2013
+  - NB: used cmd> cmake ../src
+  - NB: used cmd> msbuild fftwcalc.sln /P:Configuration=Release
+  - NB: needed the .dll to be in the same folder as the .exe
+  - NB: used cmd> copy ../dependencies/fftw/libfftw3-3.dll Release
+
+### Previously Tested On
+
+When this project was under RASDR/host/fftw-calc, it had been tested on:
+
 Linux/CentOS 6, FFTW 3.3.3, GCC 4.4.7
   - NB: this just worked as above
 
