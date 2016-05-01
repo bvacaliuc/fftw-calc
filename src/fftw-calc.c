@@ -19,6 +19,17 @@
 #include <fftw3.h>
 #include "cpuid.h"
 
+// http://stackoverflow.com/questions/1546789/clean-code-to-printf-size-t-in-c-or-nearest-equivalent-of-c99s-z-in-c
+#if defined(_MSC_VER) || defined(__MINGW32__) //__MINGW32__ should go before __GNUC__
+#define __SIZE_T_SPECIFIER    "%Iu"
+#define __SSIZE_T_SPECIFIER   "%Id"
+#define __PTRDIFF_T_SPECIFIER "%Id"
+#else //elif defined(__GNUC__)
+#define __SIZE_T_SPECIFIER    "%zu"
+#define __SSIZE_T_SPECIFIER   "%zd"
+#define __PTRDIFF_T_SPECIFIER "%zd"
+#endif
+
 void usage( const char *argv0 )
 {
 	printf("Usage:"
@@ -68,7 +79,7 @@ void main(int argc, char *argv[], char *envp[])
 
     cpuid_get_info( &cpu );
 
-	printf("FFT(%u,%s):\n",N,EST?"estimated":"measured");
+	printf("FFT("__SIZE_T_SPECIFIER", %s) :\n",N,EST?"estimated":"measured");
 	in = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * N);
 	out = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * N);
 	p = fftw_plan_dft_1d(N, in, out, FFTW_FORWARD, EST?FFTW_ESTIMATE:FFTW_MEASURE);
@@ -95,6 +106,10 @@ void main(int argc, char *argv[], char *envp[])
 	printf("FS=%.2f%s, %.2f%% overlap, %.2f %s (%s method)\n",
 		FS, fs_units, WIN*100.0, ntotal, units, EST?"by estimate":"by measure");
 
+#ifndef FFTW_DLL
+    // TODO: doesn't work for MSVC build
+    printf("FFTw Version = %s\n", fftw_version);
+#endif
     printf("Current CPU = %s\n", cpu.name.str);
     printf("CPU Threads = %d\n", cpu.threads);
 
