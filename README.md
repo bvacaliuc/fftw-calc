@@ -13,6 +13,8 @@ The directory structure is as follows:
           CMakeLists.txt         - CMake configuration
           cpuid.{c,h}            - Alexander Yee's CPU capabilities code (modified)
           fftw-calc.c            - The program
+      <project>/dependencies/fftw/
+          CMakeLists.txt         - CMake automation to download/configure FFTw
 
 ### How to Compile
 
@@ -21,8 +23,16 @@ Using a shell or command prompt window, create a directory and launch CMake.  It
       mkdir build
       cd build
       cmake ../src
+      
+To execute on Linux/MinGW/etc:
+
       make
       ./fftw-calc --help
+
+To execute on Windows/MSVC/etc:
+
+      msbuild fftwcalc.sln /P:Configuration=Release
+      Release\fftw-calc --help
 
 ### Tested On
 
