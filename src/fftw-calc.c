@@ -123,7 +123,7 @@ void main(int argc, char *argv[], char *envp[])
     // TODO: doesn't work for MSVC build
     printf("FFTw Version = %s%s\n", fftw_version, _mp);
 #else
-    printt("FFTw Version = TBD%s\n", _mp);
+    printf("FFTw Version = TBD%s\n", _mp);
 #endif
     printf("Current CPU = %s\n", cpu.name.str);
     printf("CPU Threads = %d\n", cpu.threads);
