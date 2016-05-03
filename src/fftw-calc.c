@@ -16,6 +16,7 @@
 //#include <stdbool.h>  // NB: dealt with in cpuid.h, may need to refactor/rethink 'bool'
 #include <ctype.h>  // for tolower()
 #include <errno.h>
+#include <time.h>   // for clock()
 #include <fftw3.h>
 #include "cpuid.h"
 
@@ -54,13 +55,14 @@ void main(int argc, char *argv[], char *envp[])
 	fftw_complex *in, *out;
 	fftw_plan p;
 	size_t N = 1024;
-	double FS = 1e6;	// 1MHz sample rate
+	double _FS, FS = 1e6;	// 1MHz sample rate
 	double WIN = 0.0;	// 0% window overlap
-	double nadd,nmul,nfma,ntotal,factor;
+	double nadd,nmul,nfma,nflops,ntotal,factor;
 	char *units, *fs_units;
 	bool EST = false;
 	char *endp = NULL;
     cpuid_info_t cpu;
+    const char *_mp = "";
 
 	if(argc>1 && ( *argv[1]=='?' || *argv[1]=='-' ) ) usage(argv[0]);
 
@@ -78,6 +80,17 @@ void main(int argc, char *argv[], char *envp[])
 	if(argc>4) EST = atoi(argv[4])?true:false;
 
     cpuid_get_info( &cpu );
+    _FS = FS;
+
+    // http://www.fftw.org/fftw3_doc/Usage-of-Multi_002dthreaded-FFTW.html#Usage-of-Multi_002dthreaded-FFTW
+#if defined(_OPENMP) // || defined(_POSIX_THREADS)
+    if( cpu.threads > 1 )
+    {
+        fftw_init_threads();
+        fftw_plan_with_nthreads(cpu.threads);
+        _mp = "-omp";
+    }
+#endif
 
 	printf("FFT("__SIZE_T_SPECIFIER", %s) :\n",N,EST?"estimated":"measured");
 	in = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * N);
@@ -85,7 +98,7 @@ void main(int argc, char *argv[], char *envp[])
 	p = fftw_plan_dft_1d(N, in, out, FFTW_FORWARD, EST?FFTW_ESTIMATE:FFTW_MEASURE);
 	fftw_flops(p,&nadd,&nmul,&nfma);
 	fftw_print_plan(p);
-	ntotal = nadd+nmul+((cpu.exts.XOP||cpu.exts.FMA3||cpu.exts.FMA4)?nfma:2*nfma);
+	nflops = ntotal = nadd+nmul+((cpu.exts.XOP||cpu.exts.FMA3||cpu.exts.FMA4)?nfma:2*nfma);
 	
 	printf("\nFLOPS: add=%.0f mul=%.0f fma=%.0f total=%.0f Flops/frame\n",
 		nadd, nmul, nfma, ntotal);
@@ -108,16 +121,50 @@ void main(int argc, char *argv[], char *envp[])
 
 #ifndef FFTW_DLL
     // TODO: doesn't work for MSVC build
-    printf("FFTw Version = %s\n", fftw_version);
+    printf("FFTw Version = %s%s\n", fftw_version, _mp);
+#else
+    printt("FFTw Version = TBD%s\n", _mp);
 #endif
     printf("Current CPU = %s\n", cpu.name.str);
     printf("CPU Threads = %d\n", cpu.threads);
 
 	// TODO: actually compute some representative FFTs, timing them and
 	//       extrapolate the performance on *THIS* machine as configured
-	//fftw_execute(p); /* repeat as needed */
+	if( !EST )
+	{
+		clock_t start, stop;
+		double  elapsed, fps;
+		int ii, ffts = 1 * (int)((_FS * factor) / N);
+
+		//printf("_FS=%g, factor=%g, N=%zu, ffts=%d\n", _FS, factor, N, ffts);
+
+		// the total amount of work necessary to go through 1sec of input data...
+		start = clock();
+		for(ii=0;ii<ffts;ii++) fftw_execute(p); /* repeat as needed */
+		stop = clock();
+
+		elapsed = ((double)stop - (double)start) / (double)CLOCKS_PER_SEC;
+
+		//printf("stop=%g, start=%g, elapsed=%.3f sec\n", (double)stop, (double)start, elapsed);
+
+		fps = nflops * (double)ffts/elapsed;
+		     if( fps > 5e17) { fps /= 1e18;units = "ExaFlops"; }
+		else if( fps > 5e14) { fps /= 1e15;units = "PFlops"; }
+		else if( fps > 5e11) { fps /= 1e12;units = "TFlops"; }
+		else if( fps > 5e8 ) { fps /= 1e9; units = "GFlops"; }
+		else if( fps > 5e5 ) { fps /= 1e6; units = "MFlops"; }
+		else if( fps > 5e2 ) { fps /= 1e3; units = "KFlops"; }
+		else                 {             units = "Flops";  }
+
+		printf("%d FFTs in %.3f sec (%.2f %s)\n", ffts, elapsed, fps, units);
+		if( elapsed > 1.1 ) printf("*** this CPU/configuration will not meet your specification ***\n");
+		else if( elapsed > 0.9 ) printf("*** this configuration is close to full utilization on this CPU ***\n");
+	}
 
 	fftw_destroy_plan(p);
 	fftw_free(in); fftw_free(out);
+#if defined(_OPENMP) // || defined(_POSIX_THREADS)
+	if( cpu.threads > 1 ) fftw_cleanup_threads();
+#endif
 }
 

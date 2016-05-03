@@ -63,6 +63,7 @@ void cpuid_get_info( cpuid_info_t *p ){
     p->name.buf[12] = '\0';
 #ifdef _OPENMP
     p->threads = omp_get_max_threads();
+// TODO: determine a test for CPU cores w/o OpenMP for use with POSIX threads
 #else
     p->threads = -1;
 #endif
