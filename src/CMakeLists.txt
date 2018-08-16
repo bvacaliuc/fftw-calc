@@ -18,7 +18,7 @@ ELSE()
     MESSAGE( AUTHOR_WARNING "FFTw Must already be present and installed on this system" )
 ENDIF(WIN32)
 # Configure to link FFTw
-FIND_PATH_REQUIRED( FFTW_INC fftw3.h PATHS "${CMAKE_SOURCE_DIR}/../dependencies/fftw" PATH_SUFFIXES include )
+FIND_PATH_REQUIRED( FFTW_INC fftw3.h PATHS "${CMAKE_SOURCE_DIR}/../dependencies/fftw/x64" "${CMAKE_SOURCE_DIR}/../dependencies/fftw/x86" PATH_SUFFIXES include )
 INCLUDE_DIRECTORIES( ${FFTW_INC} )
 IF(WIN32)
     MESSAGE( STATUS "Win32: using libfftw3-3.lib for linkage" )
@@ -54,14 +54,13 @@ ELSE()
 ENDIF()
 ADD_EXECUTABLE( fftw-calc ${fftwcalc_SRCS} )
 
-PROJECT( fftwio )
-SET( fftwio_SRCS fftw-io.c )
-ADD_EXECUTABLE( fftw-io ${fftwio_SRCS} )
+##SET( fftwio_SRCS fftw-io.c )
+##ADD_EXECUTABLE( fftw-io ${fftwio_SRCS} )
 
 # Handle linking and post-build steps
 IF(WIN32)
     TARGET_LINK_LIBRARIES( fftw-calc ${LIBS} ${FFTW_LIB} )
-    TARGET_LINK_LIBRARIES( fftw-io ${LIBS} ${FFTW_LIB} )
+    ##TARGET_LINK_LIBRARIES( fftw-io ${LIBS} ${FFTW_LIB} )
     # http://stackoverflow.com/questions/10046114/in-cmake-how-can-i-test-if-the-compiler-is-clang
     # http://stackoverflow.com/questions/7988297/cmake-to-add-vs2010-project-custom-build-events
     IF(CMAKE_CXX_COMPILER_ID MATCHES "MSVC" OR MINGW)
@@ -74,5 +73,5 @@ IF(WIN32)
     ENDIF()
 ELSE()
     TARGET_LINK_LIBRARIES( fftw-calc ${LIBS} ${FFTW_LIB} ${FFTW_LIB_OMP} m )
-    TARGET_LINK_LIBRARIES( fftw-io ${LIBS} ${FFTW_LIB} ${FFTW_LIB_OMP} m )
+    ##TARGET_LINK_LIBRARIES( fftw-io ${LIBS} ${FFTW_LIB} ${FFTW_LIB_OMP} m )
 ENDIF()

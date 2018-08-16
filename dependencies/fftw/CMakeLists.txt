@@ -5,10 +5,12 @@ if( CMAKE_SIZEOF_VOID_P EQUAL 8 )
   set( FFTW_URL  "ftp://ftp.fftw.org/pub/fftw/fftw-3.3.4-dll64.zip" )
   set( FFTW_PATH "fftw-3.3.4-dll64.zip" )
   set( FFTW_MD5  "c840c5450f57a98578783fa633047d83" )
+  set( FFTW_ARCH "x64" )
 else( CMAKE_SIZEOF_VOID_P EQUAL 8 )
   set( FFTW_URL  "ftp://ftp.fftw.org/pub/fftw/fftw-3.3.4-dll32.zip" )
   set( FFTW_PATH "fftw-3.3.4-dll32.zip" )
   set( FFTW_MD5  "757ce6282e7cab2dfa2dd40ba46f1c1f" )
+  set( FFTW_ARCH "x86" )
 endif( CMAKE_SIZEOF_VOID_P EQUAL 8 )
 
 # http://stackoverflow.com/questions/8153519/how-to-automatically-download-c-dependencies-in-a-cross-platform-way-cmake
@@ -43,13 +45,13 @@ endif()
 ##    DEPENDS "${FFTW_PATH}"
 ##    )
 # so punt, for now...
-if (NOT EXISTS "${dir}/${FFTW_HEADER}")
-    MESSAGE( FATAL_ERROR "Win32: please extract the contents of ${dir}/${FFTW_PATH} and re-run cmake" )
+if (NOT EXISTS "${dir}/${FFTW_ARCH}/${FFTW_HEADER}")
+    MESSAGE( FATAL_ERROR "Win32: please extract the contents of ${dir}/${FFTW_PATH} to ${dir}/${FFTW_ARCH} and re-run cmake" )
 endif()
-if (NOT EXISTS "${dir}/${FFTW_LIB}")
-    MESSAGE( STATUS "Win32: generating ${FFTW_LIB} in ${dir}" )
+if (NOT EXISTS "${dir}/${FFTW_ARCH}/${FFTW_LIB}")
+    MESSAGE( STATUS "Win32: generating ${FFTW_LIB} in ${dir}/${FFTW_ARCH}" )
     execute_process(
         COMMAND lib "/def:${FFTW_DEF}"
-        WORKING_DIRECTORY "${dir}"
+        WORKING_DIRECTORY "${dir}/${FFTW_ARCH}"
         )
 endif()
