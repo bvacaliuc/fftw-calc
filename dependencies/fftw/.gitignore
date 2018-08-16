@@ -3,21 +3,8 @@ fftw-*.zip
 fftw-*.zip
 
 # Extracted FFTW files
-COPYING
-NEWS
-README
-README-WINDOWS
-README-bench
-cmake_install.cmake
-fftw3.f
-fftw3.f03
-fftw3.h
-fftw3l.f03
-fftw3q.f03
-libfftw3-3.def
-libfftw3-3.exp
-libfftw3f-3.def
-libfftw3l-3.def
+x64
+x86
 
 # Build artifacts
 CMakeFiles
