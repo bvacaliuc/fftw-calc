@@ -19,9 +19,21 @@
 
 #include <stdio.h>
 #include <stdlib.h> // for exit()
+#include <stdint.h>
 #include <ctype.h>  // for tolower()
 #include <errno.h>
 #include <fftw3.h>
+
+// http://stackoverflow.com/questions/1546789/clean-code-to-printf-size-t-in-c-or-nearest-equivalent-of-c99s-z-in-c
+#if defined(_MSC_VER) || defined(__MINGW32__) //__MINGW32__ should go before __GNUC__
+#define __SIZE_T_SPECIFIER    "%Iu"
+#define __SSIZE_T_SPECIFIER   "%Id"
+#define __PTRDIFF_T_SPECIFIER "%Id"
+#else //elif defined(__GNUC__)
+#define __SIZE_T_SPECIFIER    "%zu"
+#define __SSIZE_T_SPECIFIER   "%zd"
+#define __PTRDIFF_T_SPECIFIER "%zd"
+#endif
 
 // How many lines of context to produce around the edge conditions
 #define CONTEXT 4
@@ -31,7 +43,7 @@
 void input_complex(fftw_complex *in, size_t N, const char *tag)
 {
     size_t i, blsiz2=N, blsiz=N*2;              // NB: differs from real
-    uint32_t bufferRead[blsiz];                 // NB: vspectra_fftw.c usage
+    uint32_t *bufferRead = calloc(blsiz, sizeof(uint32_t));
 
     fprintf(stdout,"\n# %s\n", tag);
     fprintf(stdout,"# re{sample #},im{sample #}\n");
@@ -47,6 +59,7 @@ void input_complex(fftw_complex *in, size_t N, const char *tag)
         else if(i==CONTEXT)
             fprintf(stdout,"...\n");
     }
+    free(bufferRead);
 }
 
 // from vspectra_pci_fftw.c (128-133) loading the fftw_complex input array
@@ -54,7 +67,7 @@ void input_complex(fftw_complex *in, size_t N, const char *tag)
 void input_real(fftw_complex *in, size_t N, const char *tag)
 {
     size_t i, j, kk, kkk, blsiz2=N/2, blsiz=N;  // NB: differs from complex
-    uint32_t buffer1[blsiz*2];                  // NB: vspectra_pci_fftw.c usage
+    uint32_t *buffer1 = calloc(blsiz*2, sizeof(uint32_t));
 
     fprintf(stdout,"\n# %s\n", tag);
     fprintf(stdout,"# re{sample #},im{sample #}\n");
@@ -77,6 +90,7 @@ void input_real(fftw_complex *in, size_t N, const char *tag)
         else if(i==CONTEXT)
             fprintf(stdout,"...\n");
     }
+    free(buffer1);
 }
 
 void dump(fftw_complex *x, size_t N, const char *tag)
@@ -94,7 +108,8 @@ void dump(fftw_complex *x, size_t N, const char *tag)
 void output_complex(fftw_complex *out, size_t N, const char *tag, int prec)
 {
     size_t i, j, blsiz2=N, blsiz=N*2;           // NB: differs from real
-    double vspec[blsiz2], scale;
+    double scale;
+    double *vspec = calloc(blsiz2, sizeof(double));
     int numm = 0;
 
     fprintf(stdout,"# %s\n", tag);
@@ -123,6 +138,7 @@ void output_complex(fftw_complex *out, size_t N, const char *tag, int prec)
     for (i = 0; i < blsiz2; i++) {
         fprintf(stdout,"%.*lf,%.*lf,%.6lf\n", prec, out[i][0], prec, out[i][1], vspec[i]*scale);
     }
+    free(vspec);
 }
 
 // from vspectra_pci_fftw.c (157-159) unloading the fftw_complex output array
@@ -131,7 +147,8 @@ void output_real(fftw_complex *out, size_t N, const char *tag, int prec)
 {
     size_t i, kk, blsiz2=N/2, blsiz=N;          // NB: differs from complex
     double rre, aam, rre2, aam2;
-    double vspec[blsiz2], scale;
+    double scale;
+    double *vspec = calloc(blsiz2, sizeof(double));
     int numm = 0;
 
     fprintf(stdout,"# %s\n", tag);
@@ -178,14 +195,16 @@ void output_real(fftw_complex *out, size_t N, const char *tag, int prec)
             }
         }
     }
-    if(prec<0) return;
-    // TODO: strange, the vspectra_pci_fftw.c code only increments the scaling factor
-    // once outside of the kk loop (i.e. it divides by two every 1M data points...)
-    numm++;
-    scale = 1.0/(double)numm;
-    for (i = 0; i < blsiz2; i++) {
-        fprintf(stdout,"%.*lf,%.*lf,%.6lf\n", prec, out[i][0], prec, out[i][1], vspec[i]*scale);
+    if(prec>=0) {
+        // TODO: strange, the vspectra_pci_fftw.c code only increments the scaling factor
+        // once outside of the kk loop (i.e. it divides by two every 1M data points...)
+        numm++;
+        scale = 1.0/(double)numm;
+        for (i = 0; i < blsiz2; i++) {
+            fprintf(stdout,"%.*lf,%.*lf,%.6lf\n", prec, out[i][0], prec, out[i][1], vspec[i]*scale);
+        }
     }
+    free(vspec);
 }
 
 void usage( const char *argv0 )

@@ -71,8 +71,8 @@ ENDIF()
 ADD_EXECUTABLE( fftw-calc src/fftw-calc.c src/cpuid.c )
 TARGET_LINK_LIBRARIES( fftw-calc ${LIBS} )
 
-##ADD_EXECUTABLE( fftw-io src/fftw-io.c )
-##TARGET_LINK_LIBRARIES( fftw-io ${LIBS} )
+ADD_EXECUTABLE( fftw-io src/fftw-io.c )
+TARGET_LINK_LIBRARIES( fftw-io ${LIBS} )
 
 # Handle linking and post-build steps
 IF(WIN32)
