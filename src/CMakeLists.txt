@@ -1,4 +1,8 @@
+########################################################################
+# Project setup
+########################################################################
 cmake_minimum_required(VERSION 2.8)
+PROJECT( fftwcalc )
 
 MACRO( FIND_PATH_REQUIRED arg1 arg2 )
     FIND_PATH( ${arg1} ${arg2} ${ARGN} )
@@ -9,14 +13,17 @@ MACRO( FIND_PATH_REQUIRED arg1 arg2 )
     ENDIF()
 ENDMACRO( FIND_PATH_REQUIRED )
 
-PROJECT( fftwcalc )
-SET( fftwcalc_SRCS fftw-calc.c cpuid.c )
+########################################################################
+# Dependencies
+########################################################################
+
 IF(WIN32)
     # prepare dependencies under windows
     add_subdirectory(${CMAKE_SOURCE_DIR}/../dependencies/fftw ${CMAKE_CURRENT_BINARY_DIR}/../dependencies/fftw)
 ELSE()
     MESSAGE( AUTHOR_WARNING "FFTw Must already be present and installed on this system" )
 ENDIF(WIN32)
+
 # Configure to link FFTw
 FIND_PATH_REQUIRED( FFTW_INC fftw3.h PATHS "${CMAKE_SOURCE_DIR}/../dependencies/fftw/x64" "${CMAKE_SOURCE_DIR}/../dependencies/fftw/x86" PATH_SUFFIXES include )
 INCLUDE_DIRECTORIES( ${FFTW_INC} )
@@ -52,6 +59,8 @@ ELSE()
     MESSAGE( STATUS "openmp: found but libfftw3_omp.a is not, so IGNORING it" )
     SET( FFTW_LIB_OMP "" )
 ENDIF()
+
+SET( fftwcalc_SRCS fftw-calc.c cpuid.c )
 ADD_EXECUTABLE( fftw-calc ${fftwcalc_SRCS} )
 
 ##SET( fftwio_SRCS fftw-io.c )
