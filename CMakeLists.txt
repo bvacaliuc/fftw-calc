@@ -68,6 +68,10 @@ ELSE()
     MESSAGE( STATUS "openmp: found but libfftw3_omp.a is not, so IGNORING it" )
 ENDIF()
 
+########################################################################
+# Build executables
+########################################################################
+
 ADD_EXECUTABLE( fftw-calc src/fftw-calc.c src/cpuid.c )
 TARGET_LINK_LIBRARIES( fftw-calc ${LIBS} )
 
